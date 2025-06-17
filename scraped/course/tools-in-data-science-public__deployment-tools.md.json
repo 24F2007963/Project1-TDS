@@ -1,0 +1,5 @@
+{
+  "source": "tools-in-data-science-public\\deployment-tools.md",
+  "type": "course",
+  "text": "# Deployment Tools\n\nAny application you build is likely to be deployed somewhere. This section covers the most popular tools involved in deploying an application.\n"
+}

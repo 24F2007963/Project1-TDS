@@ -1,0 +1,5 @@
+{
+  "source": "tools-in-data-science-public\\data-preparation-in-the-editor.md",
+  "type": "course",
+  "text": "## Data Preparation in the Editor\n\n[![Data preparation in the editor](https://i.ytimg.com/vi_webp/99lYu43L9uM/sddefault.webp)](https://youtu.be/99lYu43L9uM)\n\nYou'll learn how to use a text editor [Visual Studio Code](https://code.visualstudio.com/) to process and clean data, covering:\n\n- **Format** JSON files\n- **Find all** and multiple cursors to extract specific fields\n- **Sort** lines\n- **Delete duplicate** lines\n- **Replace** text with multiple cursors\n\nHere are the links used in the video:\n\n- [City-wise product sales JSON](https://drive.google.com/file/d/1VEnKChf4i04iKsQfw0MwoJlfkOBGQ65B/view?usp=drive_link)\n"
+}

@@ -1,0 +1,5 @@
+{
+  "source": "tools-in-data-science-public\\actor-network-visualization.md",
+  "type": "course",
+  "text": "## Actor Network Visualization\n\nFind the shortest path between Govinda & Angelina Jolie using IMDb data using Python: [networkx](https://pypi.org/project/networkx/) or [scikit-network](https://pypi.org/project/scikit-network).\n\n[![Jolie No. 1](https://i.ytimg.com/vi_webp/lcwMsPxPIjc/sddefault.webp)](https://youtu.be/lcwMsPxPIjc)\n\n- [Notebook: How this video was created](https://github.com/sanand0/jolie-no-1/blob/master/jolie-no-1.ipynb)\n- [The data used to visualize the network](https://github.com/sanand0/jolie-no-1/blob/master/imdb-actor-pairing.ipynb)\n- [The shortest path between actors](https://github.com/sanand0/jolie-no-1/blob/master/shortest-path.ipynb)\n- [IMDB data](https://developer.imdb.com/non-commercial-datasets/)\n- [Codebase](https://github.com/sanand0/jolie-no-1)\n"
+}
