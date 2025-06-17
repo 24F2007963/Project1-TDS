@@ -74,7 +74,7 @@ def process_documents(docs, content_key: str, source_type: str):
         full_text = doc.get(content_key, "").strip()
         if not full_text:
             continue
-
+        print('new doc started')
         # Split long text into chunks
         chunks = split_text(full_text)
 
