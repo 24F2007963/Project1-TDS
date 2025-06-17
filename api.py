@@ -4,10 +4,8 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List
 from openai import OpenAI  # ✅ new import
-import dotenv
-
-# Load environment variables
-dotenv.load_dotenv()
+import numpy as np
+from typing import Optional
 
 # Initialize OpenAI client with proxy
 client = OpenAI(
@@ -17,9 +15,45 @@ client = OpenAI(
 
 app = FastAPI()
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+POSTS_DIR = os.path.join(BASE_DIR, "scraped", "posts")
+COURSE_DIR = os.path.join(BASE_DIR, "scraped", "course")
+
+
 # ----------------------------
 # Utility to load JSON files
 # ----------------------------
+
+def load_embeddings(file_path: str):
+    with open(file_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+# Load saved embeddings once on startup
+EMBEDDINGS_PATH = os.path.join(BASE_DIR, r"embeddings\all_embeddings.json")
+doc_embeddings = load_embeddings(EMBEDDINGS_PATH)
+
+def cosine_similarity(vec1, vec2):
+    vec1 = np.array(vec1)
+    vec2 = np.array(vec2)
+    return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
+
+def find_top_k_similar(query_vec, docs, k=5):
+    scores = []
+    for doc in docs:
+        score = cosine_similarity(query_vec, doc["embedding"])
+        scores.append((score, doc))
+    scores.sort(key=lambda x: x[0], reverse=True)
+    return [doc for score, doc in scores[:k]]
+
+def generate_link(meta: dict):
+    if meta.get("source") == "post":
+        topic_id = meta.get("meta", {}).get("topic_id")
+        post_number = meta.get("meta", {}).get("post_number")
+        slug = meta.get("meta", {}).get("slug")
+        if topic_id and post_number and slug:
+            return f"https://discourse.onlinedegree.iitm.ac.in/t/{slug}/{topic_id}/{post_number}"
+    # Default link for course content
+    return "https://tds.s-anand.net/#/tds-gpt-reviewer"
 
 def load_json_files_from_dir(directory_path):
     documents = []
@@ -40,10 +74,6 @@ def load_json_files_from_dir(directory_path):
 # ----------------------------
 # Load Posts and Course Data
 # ----------------------------
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-POSTS_DIR = os.path.join(BASE_DIR, "scraped", "posts")
-COURSE_DIR = os.path.join(BASE_DIR, "scraped", "course")
 
 post_docs = load_json_files_from_dir(POSTS_DIR)
 course_docs = load_json_files_from_dir(COURSE_DIR)
@@ -67,21 +97,27 @@ class QueryResponse(BaseModel):
 # FastAPI Endpoint
 # ----------------------------
 
-@app.post("/ask", response_model=QueryResponse)
 async def ask_question(request: QueryRequest):
     user_query = request.question
 
-    # Step 1: Combine context
-    context_chunks = []
-    for item in course_docs:
-        context_chunks.append(item.get("text", ""))
-    for item in post_docs:
-        context_chunks.append(item.get("content", ""))
+    # Step 1: Embed the user query
+    try:
+        embedding_response = client.embeddings.create(
+            model="text-embedding-3-small",
+            input=user_query
+        )
+        query_embedding = embedding_response.data[0].embedding
+    except Exception as e:
+        return {"answer": f"Embedding error: {str(e)}", "links": []}
 
-    context = "\n\n---\n\n".join(context_chunks[:30])  # Limit context for prompt length
+    # Step 2: Find top matching docs by similarity
+    top_docs = find_top_k_similar(query_embedding, doc_embeddings, k=5)
 
-    # Step 2: Compose prompt
-    prompt = f"""You are a helpful teaching assistant. Use the context below to answer the user's question. And 
+    # Step 3: Build context from top docs
+    context = "\n\n---\n\n".join([doc["text"] for doc in top_docs])
+
+    # Step 4: Compose prompt
+    prompt = f"""You are a helpful teaching assistant. Use the context below to answer the user's question.
 
 Context:
 {context}
@@ -89,7 +125,7 @@ Context:
 Question: {user_query}
 Answer:"""
 
-    # Step 3: Call OpenAI proxy
+    # Step 5: Call GPT chat completion
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -101,17 +137,15 @@ Answer:"""
             max_tokens=512
         )
         answer = response.choices[0].message.content.strip()
-
     except Exception as e:
-        return {
-            "answer": f"Error generating response: {str(e)}",
-            "links": []
-        }
+        return {"answer": f"Error generating response: {str(e)}", "links": []}
 
-    # Step 4: Prepare dummy links (or implement retrieval later)
-    links = [
-        {"url": "https://discourse.onlinedegree.iitm.ac.in/", "text": "IITM Discourse"},
-        {"url": "https://github.com/s-anand/tds-course", "text": "Course GitHub Repo"}
-    ]
+    # Step 6: Generate relevant links for top docs
+    links = []
+    for doc in top_docs:
+        url = generate_link(doc)
+        # Avoid duplicates
+        if url not in [l.url for l in links]:
+            links.append({"url": url, "text": doc["text"][:80] + ("..." if len(doc["text"]) > 80 else "")})
 
     return {"answer": answer, "links": links}
