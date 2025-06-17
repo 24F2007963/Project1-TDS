@@ -1,15 +1,19 @@
 import os
 import json
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List
-import openai
+from openai import OpenAI  # ✅ new import
 import dotenv
 
 # Load environment variables
 dotenv.load_dotenv()
-openai.api_base = "http://aiproxy.sanand.workers.dev/openai/v1"  # e.g. http://aiproxy.sanand.workers.dev/openai/v1
-openai.api_key = os.getenv("AIPROXY_TOKEN")    # your AIPROXY_TOKEN
+
+# Initialize OpenAI client with proxy
+client = OpenAI(
+    base_url="http://aiproxy.sanand.workers.dev/openai/v1",  # ✅ proxy endpoint
+    api_key=os.getenv("AIPROXY_TOKEN")
+)
 
 app = FastAPI()
 
@@ -49,7 +53,7 @@ course_docs = load_json_files_from_dir(COURSE_DIR)
 # ----------------------------
 
 class QueryRequest(BaseModel):
-    query: str
+    question: str
 
 class Link(BaseModel):
     url: str
@@ -65,7 +69,7 @@ class QueryResponse(BaseModel):
 
 @app.post("/ask", response_model=QueryResponse)
 async def ask_question(request: QueryRequest):
-    user_query = request.query
+    user_query = request.question
 
     # Step 1: Combine context
     context_chunks = []
@@ -77,7 +81,7 @@ async def ask_question(request: QueryRequest):
     context = "\n\n---\n\n".join(context_chunks[:30])  # Limit context for prompt length
 
     # Step 2: Compose prompt
-    prompt = f"""You are a helpful teaching assistant. Use the context below to answer the user's question.
+    prompt = f"""You are a helpful teaching assistant. Use the context below to answer the user's question. And 
 
 Context:
 {context}
@@ -87,8 +91,8 @@ Answer:"""
 
     # Step 3: Call OpenAI proxy
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4o-mini",  # or use a lighter one if needed
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a helpful teaching assistant."},
                 {"role": "user", "content": prompt}
@@ -96,7 +100,7 @@ Answer:"""
             temperature=0.2,
             max_tokens=512
         )
-        answer = response["choices"][0]["message"]["content"].strip()
+        answer = response.choices[0].message.content.strip()
 
     except Exception as e:
         return {
