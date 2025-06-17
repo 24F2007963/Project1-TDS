@@ -29,7 +29,7 @@ def load_embeddings(file_path: str):
         return json.load(f)
 
 # Load saved embeddings once on startup
-EMBEDDINGS_PATH = os.path.join(BASE_DIR, r"embeddings\all_embeddings.json")
+EMBEDDINGS_PATH = os.path.join(BASE_DIR, "embeddings","all_embeddings.json")
 doc_embeddings = load_embeddings(EMBEDDINGS_PATH)
 
 def cosine_similarity(vec1, vec2):
@@ -45,15 +45,31 @@ def find_top_k_similar(query_vec, docs, k=5):
     scores.sort(key=lambda x: x[0], reverse=True)
     return [doc for score, doc in scores[:k]]
 
+def slugify(text: str) -> str:
+    return (
+        text.lower()
+        .replace(" ", "-")
+        .replace("?", "")
+        .replace(",", "")
+        .replace(".", "")
+        .replace(":", "")
+        .strip()
+    )
+
 def generate_link(meta: dict):
-    if meta.get("source") == "post":
+    if meta.get("source") == "discourse":
         topic_id = meta.get("meta", {}).get("topic_id")
         post_number = meta.get("meta", {}).get("post_number")
-        slug = meta.get("meta", {}).get("slug")
-        if topic_id and post_number and slug:
-            return f"https://discourse.onlinedegree.iitm.ac.in/t/{slug}/{topic_id}/{post_number}"
+        if topic_id and post_number :
+            return f"https://discourse.onlinedegree.iitm.ac.in/t/{topic_id}/{post_number}"
+    elif meta.get("source") == "course":
+        source_path = meta.get("meta", {}).get("source")
+        filename = os.path.basename(source_path)
+        filename_no_ext = os.path.splitext(filename)[0]
+        slug = slugify(filename_no_ext)
+        return f"https://tds.s-anand.net/#/{slug}"
     # Default link for course content
-    return "https://tds.s-anand.net/#/tds-gpt-reviewer"
+    return "https://tds.s-anand.net/#/README"
 
 def load_json_files_from_dir(directory_path):
     documents = []
@@ -97,6 +113,7 @@ class QueryResponse(BaseModel):
 # FastAPI Endpoint
 # ----------------------------
 
+@app.post("/ask", response_model=QueryResponse)
 async def ask_question(request: QueryRequest):
     user_query = request.question
 
@@ -145,7 +162,7 @@ Answer:"""
     for doc in top_docs:
         url = generate_link(doc)
         # Avoid duplicates
-        if url not in [l.url for l in links]:
+        if url not in [l["url"] for l in links]:
             links.append({"url": url, "text": doc["text"][:80] + ("..." if len(doc["text"]) > 80 else "")})
 
     return {"answer": answer, "links": links}
