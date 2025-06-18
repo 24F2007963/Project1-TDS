@@ -13,3 +13,28 @@
 2025-06-18T02:44:06.261Z [ERROR]: API call error: TypeError: Cannot read properties of null (reading 'data')
 2025-06-18T02:44:06.261Z [ERROR]: API call error: TypeError: Cannot read properties of null (reading 'data')
 2025-06-18T02:54:35.910Z [ERROR]: API call error: TypeError: Cannot read properties of null (reading 'data')
+2025-06-18T03:57:02.920Z [ERROR]: Could not identify provider: [1mevaluator[22m.
+
+[37mPlease check your configuration and ensure the provider is correctly specified.[39m
+[37m[39m
+[37mFor more information on supported providers, visit:[39m [36mhttps://promptfoo.dev/docs/providers/[39m
+2025-06-18T03:57:02.948Z [ERROR]: Could not identify provider: [1mevaluator[22m.
+
+[37mPlease check your configuration and ensure the provider is correctly specified.[39m
+[37m[39m
+[37mFor more information on supported providers, visit:[39m [36mhttps://promptfoo.dev/docs/providers/[39m
+2025-06-18T03:57:02.974Z [ERROR]: Could not identify provider: [1mevaluator[22m.
+
+[37mPlease check your configuration and ensure the provider is correctly specified.[39m
+[37m[39m
+[37mFor more information on supported providers, visit:[39m [36mhttps://promptfoo.dev/docs/providers/[39m
+2025-06-18T03:57:02.974Z [ERROR]: Could not identify provider: [1mevaluator[22m.
+
+[37mPlease check your configuration and ensure the provider is correctly specified.[39m
+[37m[39m
+[37mFor more information on supported providers, visit:[39m [36mhttps://promptfoo.dev/docs/providers/[39m
+2025-06-18T03:57:02.992Z [ERROR]: Could not identify provider: [1mevaluator[22m.
+
+[37mPlease check your configuration and ensure the provider is correctly specified.[39m
+[37m[39m
+[37mFor more information on supported providers, visit:[39m [36mhttps://promptfoo.dev/docs/providers/[39m
